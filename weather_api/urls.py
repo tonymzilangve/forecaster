@@ -2,5 +2,5 @@ from django.urls import path
 from .views import fetch_weather_forecast
 
 urlpatterns = [
-    path("weather/", fetch_weather_forecast)
+    path("weather/<str:city>", fetch_weather_forecast)
 ]
