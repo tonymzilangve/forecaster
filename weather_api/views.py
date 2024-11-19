@@ -1,7 +1,7 @@
 import os
 import requests
 from django.http import Http404, HttpResponse
-from rest_framework import generics
+from rest_framework import filters, generics
 
 from geopy.geocoders import Nominatim
 from .models import City, WeatherRequest
@@ -61,3 +61,6 @@ def fetch_weather_forecast(request, city):
 class WeatherRequestView(generics.ListAPIView):
     queryset = WeatherRequest.objects.all()
     serializer_class = WeatherRequestSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ["city", "timestamp"]
+    ordering = ["city", "-timestamp"]
