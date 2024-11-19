@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "weather_api",
     "drf_yasg",
     "rest_framework",
+    "django_filters",
 ]
 
 MIDDLEWARE = [
