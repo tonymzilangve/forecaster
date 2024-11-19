@@ -12,6 +12,7 @@ class City(models.Model):
     class Meta:
         verbose_name = 'City'
         verbose_name_plural = 'Cities'
+        ordering = ("name",)
 
 
 class WeatherRequest(models.Model):
@@ -32,3 +33,4 @@ class WeatherRequest(models.Model):
     class Meta:
         verbose_name = 'Weather request'
         verbose_name_plural = 'Weather requests'
+        ordering = ("-timestamp",)
