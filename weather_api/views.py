@@ -3,11 +3,11 @@ import requests
 
 from django.http import Http404, HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics
+from rest_framework import filters, generics, viewsets
 
 from geopy.geocoders import Nominatim
 from .models import City, WeatherRequest
-from .serializers import WeatherRequestSerializer
+from .serializers import CitySerializer, WeatherRequestSerializer
 
 
 geolocator = Nominatim(user_agent="weather_api")
@@ -67,4 +67,8 @@ class WeatherRequestView(generics.ListAPIView):
     filterset_fields = ["source_type"]
     ordering_fields = ["city", "timestamp"]
     ordering = ["city", "-timestamp"]
-    
+
+
+class CityViewSet(viewsets.ModelViewSet):
+    queryset = City.objects.all()
+    serializer_class = CitySerializer
