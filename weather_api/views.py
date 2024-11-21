@@ -1,63 +1,61 @@
 import os
 import requests
 
-from django.http import Http404, HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, viewsets
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from geopy.geocoders import Nominatim
 from .models import City, WeatherRequest
 from .serializers import CitySerializer, WeatherRequestSerializer
+from .utils import YANDEX_HEADERS
 
 
 geolocator = Nominatim(user_agent="weather_api")
 
 
-def fetch_weather_forecast(request, city):
-
-    headers = {
-        'X-Yandex-Weather-Key': os.getenv("YANDEX_ACCESS_KEY")
-    }
-    
-    city_info = City.objects.filter(name=city.capitalize()).first()
-    
-    if not city_info:
-        location = geolocator.geocode(city)
-        if not location:
-            raise Http404
+class WeatherAPIView(APIView):
+    def get(self, request, city):
+        city_info = City.objects.filter(name=city.capitalize()).first()
         
-        lat = location.latitude
-        lon = location.longitude
-        city_info = City.objects.create(name=city.capitalize(), latitude=lat, longitude=lon)
-    else:
-        lat = city_info.latitude
-        lon = city_info.longitude
-    
-    response = requests.get(
-                        f"{os.getenv('YANDEX_API_URL')}"
-                        f"?lat={lat}"
-                        f"&lon={lon}",
-                        headers=headers)
+        if not city_info:
+            location = geolocator.geocode(city)
+            if not location:
+                return Response({"error_msg": f"City with name {city} does not exist!"})
+            
+            lat = location.latitude
+            lon = location.longitude
+            city_info = City.objects.create(name=city.capitalize(), latitude=lat, longitude=lon)
+        else:
+            lat = city_info.latitude
+            lon = city_info.longitude
+        
+        response = requests.get(
+                            f"{os.getenv('YANDEX_API_URL')}"
+                            f"?lat={lat}"
+                            f"&lon={lon}",
+                            headers=YANDEX_HEADERS)
 
-    weather_now = response.json()["fact"]
-    temp = weather_now["temp"]
-    pressure = weather_now["pressure_mm"]
-    windspeed = weather_now["wind_speed"]
-    
-    new_request = WeatherRequest.objects.create(
-        city=city_info,
-        temperature=temp,
-        pressure=pressure,
-        wind_speed=windspeed
-    )
-    
-    output = {
-        "temperature": temp,
-        "pressure": pressure,
-        "wind speed": windspeed
-    }
+        weather_now = response.json()["fact"]
+        temp = weather_now["temp"]
+        pressure = weather_now["pressure_mm"]
+        windspeed = weather_now["wind_speed"]
+        
+        new_request = WeatherRequest.objects.create(
+            city=city_info,
+            temperature=temp,
+            pressure=pressure,
+            wind_speed=windspeed
+        )
+        
+        output = {
+            "temperature": temp,
+            "pressure": pressure,
+            "wind speed": windspeed
+        }
 
-    return HttpResponse(output)
+        return Response({city: output})
 
 
 class WeatherRequestView(generics.ListAPIView):
