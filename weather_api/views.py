@@ -37,6 +37,8 @@ class WeatherAPIView(APIView):
                             f"&lon={lon}",
                             headers=YANDEX_HEADERS)
 
+        source = request.query_params.get("source_type", "web")
+        
         weather_now = response.json()["fact"]
         temp = weather_now["temp"]
         pressure = weather_now["pressure_mm"]
@@ -46,13 +48,14 @@ class WeatherAPIView(APIView):
             city=city_info,
             temperature=temp,
             pressure=pressure,
-            wind_speed=windspeed
+            wind_speed=windspeed,
+            source_type=source,
         )
         
         output = {
             "temperature": temp,
             "pressure": pressure,
-            "wind speed": windspeed
+            "wind_speed": windspeed,
         }
 
         return Response({city: output})
