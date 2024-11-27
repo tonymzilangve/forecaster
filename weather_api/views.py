@@ -1,6 +1,7 @@
 import os
 import requests
 
+from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, viewsets
 from rest_framework.response import Response
@@ -17,6 +18,10 @@ geolocator = Nominatim(user_agent="weather_api")
 
 class WeatherAPIView(APIView):
     def get(self, request, city):
+
+        if city.capitalize() in cache:
+            return Response({city: cache.get(city.capitalize())})
+        
         city_info = City.objects.filter(name=city.capitalize()).first()
         
         if not city_info:
@@ -30,7 +35,7 @@ class WeatherAPIView(APIView):
         else:
             lat = city_info.latitude
             lon = city_info.longitude
-        
+
         response = requests.get(
                             f"{os.getenv('YANDEX_API_URL')}"
                             f"?lat={lat}"
@@ -54,6 +59,7 @@ class WeatherAPIView(APIView):
             "pressure": pressure,
             "wind speed": windspeed
         }
+        cache.set(city.capitalize(), output, 30*60)
 
         return Response({city: output})
 
