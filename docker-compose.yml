@@ -1,0 +1,38 @@
+x-app-config: &app-config
+  SECRET_KEY: 'secret_key'
+  REDIS_HOST: 'redis'
+  REDIS_PORT: '6379'
+  YANDEX_API_URL: 'https://api.weather.yandex.ru/v2/forecast'
+
+x-db-config: &db-config
+  DATABASE_NAME: postgres
+  DATABASE_USER: postgres
+  DATABASE_PASSWORD: pgpassword
+  DATABASE_HOST: db
+  DATABASE_PORT: 5432
+  PGUSER: postgres
+  POSTGRES_PASSWORD: postgres
+
+services:
+  api:
+    build: .
+    ports:
+    - 8000:8000
+    depends_on:
+      - db
+      - redis
+    environment: *app-config
+    env_file:
+      - .env
+    command: python manage.py runserver 0.0.0.0:8000 
+
+  db:
+    image: postgres:14.0-alpine
+    ports:
+      - 5432:5432
+    environment: *db-config
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
