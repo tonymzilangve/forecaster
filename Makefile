@@ -15,3 +15,6 @@ superuser:
 
 shell:
 	docker-compose run --rm api  shell
+
+test:
+	docker-compose run --rm api pytest
