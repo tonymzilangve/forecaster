@@ -36,3 +36,11 @@ services:
     image: redis:7-alpine
     ports:
       - 6379:6379
+
+  tgbot:
+    build:
+      context: ./
+      dockerfile: ./bot/Dockerfile
+    depends_on:
+      - api
+    command: python bot/bot.py 
