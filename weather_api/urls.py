@@ -6,7 +6,7 @@ router = routers.SimpleRouter()
 router.register(r"cities", CityViewSet, basename="city")
 
 urlpatterns = [
-    path("weather/<str:city>", WeatherAPIView.as_view()),
-    path("requests/", WeatherRequestView.as_view()),
+    path("weather/<str:city>", WeatherAPIView.as_view(), name="weather_info"),
+    path("requests/", WeatherRequestView.as_view(), name="weather_requests"),
     path("", include(router.urls)),
 ]
