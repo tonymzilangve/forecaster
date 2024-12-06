@@ -14,7 +14,7 @@ superuser:
 	docker-compose exec api python manage.py createsuperuser
 
 shell:
-	docker-compose run --rm api  shell
+	docker-compose run --rm api shell
 
 test:
 	docker-compose run --rm api pytest

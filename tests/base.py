@@ -15,6 +15,57 @@ def merge(base: dict, another_values: dict = None) -> dict:
         return result
 
 
+class TestViewBase(APITestCase):
+    client: APIClient = None
+    
+    @classmethod
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
+        cls.client = APIClient()
+
+    @classmethod
+    def list_url(cls, args: List[Union[str, int]] = None) -> str:
+        return reverse(f"{cls.basename}", args=args)
+
+    @classmethod
+    def _assert_pagination(cls, response_json: dict) -> None:
+        results = response_json["results"]
+        assert response_json == {
+            "count": len(results),
+            "next": None,
+            "previous": None,
+            "results": results,
+        }
+
+    @classmethod
+    def _assert_no_pagination(cls, response_json: dict) -> None:
+        assert list(response_json.keys()) == ["results"]
+
+    def list(self, data: dict = None, args: List[Union[str, int]] = None, pagination: bool = True) -> dict:
+        response = self.client.get(self.list_url(args), data=data)
+        assert response.status_code == HTTPStatus.OK, response.content
+        
+        if pagination:
+            self._assert_pagination(response.json())
+        else:
+            self._assert_no_pagination(response.json())
+        
+        return response.data 
+    
+    @classmethod
+    def ids(cls, items: List[dict]) -> List[int]:
+        return [item["id"] for item in items]
+
+    def assert_list_ids(
+        self,
+        expected: List[dict],
+        query: dict = None,
+        args: Union[str, int] = None
+    ) -> None:
+        entities = self.list(query, args)["results"]
+        assert self.ids(entities) == self.ids(expected)
+
+
 class TestViewSetBase(APITestCase):
     client: APIClient = None
     
@@ -42,9 +93,29 @@ class TestViewSetBase(APITestCase):
         assert response.status_code == HTTPStatus.CREATED, response.content
         return response.data
 
-    def list(self, data: dict = None, args: List[Union[str, int]] = None) -> dict:
+    @classmethod
+    def _assert_pagination(cls, response_json: dict) -> None:
+        results = response_json["results"]
+        assert response_json == {
+            "count": len(results),
+            "next": None,
+            "previous": None,
+            "results": results,
+        }
+
+    @classmethod
+    def _assert_no_pagination(cls, response_json: dict) -> None:
+        assert list(response_json.keys()) == ["results"]
+
+    def list(self, data: dict = None, args: List[Union[str, int]] = None, pagination: bool = True) -> dict:
         response = self.client.get(self.list_url(args), data=data)
         assert response.status_code == HTTPStatus.OK, response.content
+        
+        if pagination:
+            self._assert_pagination(response.json())
+        else:
+            self._assert_no_pagination(response.json())
+        
         return response.data
 
     def request_retrieve(self, args: Union[str, int]) -> Response:
